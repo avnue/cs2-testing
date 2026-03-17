@@ -1,0 +1,32 @@
+name: Build LevelUpLabs
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Build
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      # Add -m for multi-core builds and -p:Configuration=Release to build the release binary
+      run: msbuild CS2_External.sln /p:Configuration=Release /p:Platform=x64 -m
+
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: LevelUpLabs-Build
+        path: x64/Release/LevelUpLabs.exe
