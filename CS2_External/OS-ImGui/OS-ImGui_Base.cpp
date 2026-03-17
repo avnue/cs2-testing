@@ -16,7 +16,12 @@ namespace OSImGui
         ImFontAtlas* fontAtlas = new ImFontAtlas();
         ImFontConfig arialConfig;
         arialConfig.FontDataOwnedByAtlas = false;
-        ImFont* arialFont = fontAtlas->AddFontFromFileTTF("c:\\Windows\\Fonts\\msyhbd.ttc", 20.0f, &arialConfig, io.Fonts->GetGlyphRangesAll());
+        // Get the path to the executable directory and load the bundled font
+        char exePath[MAX_PATH];
+        GetModuleFileNameA(NULL, exePath, MAX_PATH);
+        std::string fontPath(exePath);
+        fontPath = fontPath.substr(0, fontPath.find_last_of("\\/") + 1) + "msyhbd.ttc";
+        ImFont* arialFont = fontAtlas->AddFontFromFileTTF(fontPath.c_str(), 20.0f, &arialConfig, io.Fonts->GetGlyphRangesAll());
         
         ImFontConfig iconConfig;
         static const ImWchar iconRanges[] = { ICON_MIN_FA, ICON_MAX_16_FA, 0 };

@@ -75,7 +75,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <TargetName>LevelUpLabs</TargetName>
-    <LibraryPath>$(ProjectDir)\Utils\curl\lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -140,7 +140,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(CoreLibraryDependencies);libcurl_imp.lib;winhttp.lib</AdditionalDependencies>
+      <AdditionalDependencies>$(CoreLibraryDependencies);winhttp.lib</AdditionalDependencies>
       <OutputFile>$(OutDir)LevelUpLabs$(TargetExt)</OutputFile>
     </Link>
   </ItemDefinitionGroup>
@@ -315,7 +315,6 @@
     <Font Include="Font\stratum2.ttf" />
   </ItemGroup>
   <ItemGroup>
-    <Library Include="Utils\curl\lib\libcurl_imp.lib" />
     <Library Include="Utils\yaml-cpp\lib\yaml-cpp.lib" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
