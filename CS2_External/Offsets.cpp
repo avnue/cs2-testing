@@ -1,130 +1,188 @@
 #include "Offsets.h"
 #include <string>
 #include <fstream>
+#include <sstream>
 #include "yaml-cpp/yaml.h"
 #include <iostream>
+#include "resource.h"
+
+// Helper to handle mixed hex/decimal from yaml
+template<typename T>
+T get_val(const YAML::Node& n) {
+    if (!n.IsDefined() || n.IsNull()) return 0;
+    std::string s = n.as<std::string>();
+    if (s.empty()) return 0;
+    
+    try {
+        // Check if it's hex (prefixed with 0x)
+        if (s.find("0x") == 0 || s.find("0X") == 0)
+            return (T)std::stoul(s, nullptr, 16);
+        
+        // If it contains A-F and no other weird chars, it's likely hex even without 0x
+        bool has_hex_chars = false;
+        for(char c : s) {
+            if (isxdigit(c) && !isdigit(c)) {
+                has_hex_chars = true;
+                break;
+            }
+        }
+        
+        if (has_hex_chars)
+            return (T)std::stoul(s, nullptr, 16);
+        else
+            return (T)std::stoull(s, nullptr, 10); // Use stoull for large decimals
+            
+    } catch (...) {
+        return (T)0;
+    }
+}
 
 bool Offset::UpdateOffsets()
 {
+    YAML::Node config;
     try {
         std::string yamlPath = "offsets.yaml";
+        bool loaded = false;
         
-        // Try current directory, then one level up
+        // 1. Try to load from file (for development/updates)
         std::ifstream f(yamlPath);
         if (!f.good()) {
             yamlPath = "../offsets.yaml";
             f.open(yamlPath);
         }
         
-        if (!f.good()) {
-            std::cout << "[ERROR] Could not find offsets.yaml in current or parent directory." << std::endl;
-            return false;
+        if (f.good()) {
+            config = YAML::Load(f);
+            std::cout << "[Info] Loaded offsets from file: " << yamlPath << std::endl;
+            loaded = true;
         }
         f.close();
 
-        YAML::Node config = YAML::LoadFile(yamlPath);
+        // 2. Fallback: Load from resource (embedded in exe)
+        if (!loaded) {
+            HRSRC hRes = FindResource(NULL, MAKEINTRESOURCE(IDR_OFFSETS_YAML), RT_RCDATA);
+            if (hRes) {
+                HGLOBAL hData = LoadResource(NULL, hRes);
+                if (hData) {
+                    DWORD dataSize = SizeofResource(NULL, hRes);
+                    char* data = (char*)LockResource(hData);
+                    if (data) {
+                        std::string content(data, dataSize);
+                        config = YAML::Load(content);
+                        std::cout << "[Info] Loaded offsets from embedded resource." << std::endl;
+                        loaded = true;
+                    }
+                }
+            }
+        }
+
+        if (!loaded) {
+            std::cout << "[ERROR] Could not find offsets.yaml or load embedded resource." << std::endl;
+            return false;
+        }
+
         auto client = config["client_dll"];
         auto engine = config["engine2_dll"];
         auto input = config["inputsystem_dll"];
         auto classes = client["classes"];
 
         // Global Offsets
-        Offset::EntityList = client["dwEntityList"].as<DWORD>();
-        Offset::LocalPlayerController = client["dwLocalPlayerController"].as<DWORD>();
-        Offset::LocalPlayerPawn = client["dwLocalPlayerPawn"].as<DWORD>();
-        Offset::GlobalVars = client["dwGlobalVars"].as<DWORD>();
-        Offset::ViewAngle = client["dwViewAngles"].as<DWORD>();
-        Offset::Matrix = client["dwViewMatrix"].as<DWORD>();
-        Offset::PlantedC4 = client["dwPlantedC4"].as<DWORD>();
-        Offset::Sensitivity = client["dwSensitivity"].as<DWORD>();
-        Offset::InputSystem = input["dwInputSystem"].as<DWORD>();
-        Offset::ForceJump = client["jump"].as<DWORD>();
-        Offset::ForceCrouch = client["duck"].as<DWORD>();
-        Offset::ForceForward = client["forward"].as<DWORD>();
-        Offset::ForceLeft = client["left"].as<DWORD>();
-        Offset::ForceRight = client["right"].as<DWORD>();
+        Offset::EntityList = get_val<DWORD>(client["dwEntityList"]);
+        Offset::LocalPlayerController = get_val<DWORD>(client["dwLocalPlayerController"]);
+        Offset::LocalPlayerPawn = get_val<DWORD>(client["dwLocalPlayerPawn"]);
+        Offset::GlobalVars = get_val<DWORD>(client["dwGlobalVars"]);
+        Offset::ViewAngle = get_val<DWORD>(client["dwViewAngles"]);
+        Offset::Matrix = get_val<DWORD>(client["dwViewMatrix"]);
+        Offset::PlantedC4 = get_val<DWORD>(client["dwPlantedC4"]);
+        Offset::Sensitivity = get_val<DWORD>(client["dwSensitivity"]);
+        Offset::InputSystem = get_val<DWORD>(input["dwInputSystem"]);
+        Offset::ForceJump = get_val<DWORD>(client["jump"]);
+        Offset::ForceCrouch = get_val<DWORD>(client["duck"]);
+        Offset::ForceForward = get_val<DWORD>(client["forward"]);
+        Offset::ForceLeft = get_val<DWORD>(client["left"]);
+        Offset::ForceRight = get_val<DWORD>(client["right"]);
 
-        // Entity Offsets (mapped from YAML classes)
+        // Entity Offsets
         auto baseEntity = classes["C_BaseEntity"]["fields"];
         auto playerController = classes["CCSPlayerController"]["fields"];
         
-        Offset::Entity.Health = playerController["m_iPawnHealth"].as<DWORD>();
-        Offset::Entity.TeamID = baseEntity["m_iTeamNum"].as<DWORD>();
-        Offset::Entity.IsAlive = playerController["m_bPawnIsAlive"].as<DWORD>();
-        Offset::Entity.PlayerPawn = playerController["m_hPawn"].as<DWORD>();
-        Offset::Entity.iszPlayerName = playerController["m_iszPlayerName"].as<DWORD>();
+        Offset::Entity.Health = get_val<DWORD>(playerController["m_iPawnHealth"]);
+        Offset::Entity.TeamID = get_val<DWORD>(baseEntity["m_iTeamNum"]);
+        Offset::Entity.IsAlive = get_val<DWORD>(playerController["m_bPawnIsAlive"]);
+        Offset::Entity.PlayerPawn = get_val<DWORD>(playerController["m_hPawn"]);
+        Offset::Entity.iszPlayerName = get_val<DWORD>(playerController["m_iszPlayerName"]);
 
         // Pawn Offsets
         auto basePawn = classes["C_BasePlayerPawn"]["fields"];
         auto csPawn = classes["C_CSPlayerPawn"]["fields"];
         
-        Offset::Pawn.MovementServices = basePawn["m_pMovementServices"].as<DWORD>();
-        Offset::Pawn.WeaponServices = basePawn["m_pWeaponServices"].as<DWORD>();
-        Offset::Pawn.BulletServices = csPawn["m_pBulletServices"].as<DWORD>();
-        Offset::Pawn.CameraServices = basePawn["m_pCameraServices"].as<DWORD>();
-        Offset::Pawn.pClippingWeapon = csPawn["m_pClippingWeapon"].as<DWORD>();
+        Offset::Pawn.MovementServices = get_val<DWORD>(basePawn["m_pMovementServices"]);
+        Offset::Pawn.WeaponServices = get_val<DWORD>(basePawn["m_pWeaponServices"]);
+        Offset::Pawn.BulletServices = get_val<DWORD>(csPawn["m_pBulletServices"]);
+        Offset::Pawn.CameraServices = get_val<DWORD>(basePawn["m_pCameraServices"]);
+        Offset::Pawn.pClippingWeapon = get_val<DWORD>(csPawn["m_pClippingWeapon"]);
         
-        Offset::Pawn.Pos = basePawn["m_vOldOrigin"].as<DWORD>();
-        Offset::Pawn.MaxHealth = baseEntity["m_iMaxHealth"].as<DWORD>();
-        Offset::Pawn.CurrentHealth = baseEntity["m_iHealth"].as<DWORD>();
-        Offset::Pawn.GameSceneNode = baseEntity["m_pGameSceneNode"].as<DWORD>();
-        Offset::Pawn.angEyeAngles = csPawn["m_angEyeAngles"].as<DWORD>();
-        Offset::Pawn.vecLastClipCameraPos = csPawn["m_vecLastClipCameraPos"].as<DWORD>();
-        Offset::Pawn.iShotsFired = csPawn["m_iShotsFired"].as<DWORD>();
-        Offset::Pawn.flFlashMaxAlpha = csPawn["m_flFlashMaxAlpha"].as<DWORD>();
-        Offset::Pawn.flFlashDuration = csPawn["m_flFlashDuration"].as<DWORD>();
-        Offset::Pawn.aimPunchAngle = csPawn["m_aimPunchAngle"].as<DWORD>();
-        Offset::Pawn.aimPunchCache = csPawn["m_aimPunchCache"].as<DWORD>();
-        Offset::Pawn.iIDEntIndex = csPawn["m_iIDEntIndex"].as<DWORD>();
-        Offset::Pawn.iTeamNum = baseEntity["m_iTeamNum"].as<DWORD>();
-        Offset::Pawn.fFlags = baseEntity["m_fFlags"].as<DWORD>();
+        Offset::Pawn.Pos = get_val<DWORD>(basePawn["m_vOldOrigin"]);
+        Offset::Pawn.MaxHealth = get_val<DWORD>(baseEntity["m_iMaxHealth"]);
+        Offset::Pawn.CurrentHealth = get_val<DWORD>(baseEntity["m_iHealth"]);
+        Offset::Pawn.GameSceneNode = get_val<DWORD>(baseEntity["m_pGameSceneNode"]);
+        Offset::Pawn.angEyeAngles = get_val<DWORD>(csPawn["m_angEyeAngles"]);
+        Offset::Pawn.vecLastClipCameraPos = get_val<DWORD>(csPawn["m_vecLastClipCameraPos"]);
+        Offset::Pawn.iShotsFired = get_val<DWORD>(csPawn["m_iShotsFired"]);
+        Offset::Pawn.flFlashMaxAlpha = get_val<DWORD>(csPawn["m_flFlashMaxAlpha"]);
+        Offset::Pawn.flFlashDuration = get_val<DWORD>(csPawn["m_flFlashDuration"]);
+        Offset::Pawn.aimPunchAngle = get_val<DWORD>(csPawn["m_aimPunchAngle"]);
+        Offset::Pawn.aimPunchCache = get_val<DWORD>(csPawn["m_aimPunchCache"]);
+        Offset::Pawn.iIDEntIndex = get_val<DWORD>(csPawn["m_iIDEntIndex"]);
+        Offset::Pawn.iTeamNum = get_val<DWORD>(baseEntity["m_iTeamNum"]);
+        Offset::Pawn.fFlags = get_val<DWORD>(baseEntity["m_fFlags"]);
 
         auto camServices = classes["CPlayer_CameraServices"]["fields"];
-        Offset::Pawn.iFovStart = camServices["m_iFOVStart"].as<DWORD>();
+        Offset::Pawn.iFovStart = get_val<DWORD>(camServices["m_iFOVStart"]);
 
         auto spottedState = classes["EntitySpottedState_t"]["fields"];
-        Offset::Pawn.bSpottedByMask = csPawn["m_entitySpottedState"].as<DWORD>() + spottedState["m_bSpottedByMask"].as<DWORD>();
+        Offset::Pawn.bSpottedByMask = get_val<DWORD>(csPawn["m_entitySpottedState"]) + get_val<DWORD>(spottedState["m_bSpottedByMask"]);
 
         // PlayerController Offsets
-        Offset::PlayerController.m_hPawn = playerController["m_hPawn"].as<DWORD>();
-        Offset::PlayerController.m_pObserverServices = basePawn["m_pObserverServices"].as<DWORD>();
-        Offset::PlayerController.m_hObserverTarget = classes["CPlayer_ObserverServices"]["fields"]["m_hObserverTarget"].as<DWORD>();
-        Offset::PlayerController.m_hController = basePawn["m_hController"].as<DWORD>();
-        Offset::PlayerController.PawnArmor = playerController["m_iPawnArmor"].as<DWORD>();
-        Offset::PlayerController.HasDefuser = playerController["m_bPawnHasDefuser"].as<DWORD>();
-        Offset::PlayerController.HasHelmet = playerController["m_bPawnHasHelmet"].as<DWORD>();
+        Offset::PlayerController.m_hPawn = get_val<DWORD>(playerController["m_hPawn"]);
+        Offset::PlayerController.m_pObserverServices = get_val<DWORD>(basePawn["m_pObserverServices"]);
+        Offset::PlayerController.m_hObserverTarget = get_val<DWORD>(classes["CPlayer_ObserverServices"]["fields"]["m_hObserverTarget"]);
+        Offset::PlayerController.m_hController = get_val<DWORD>(basePawn["m_hController"]);
+        Offset::PlayerController.PawnArmor = get_val<DWORD>(playerController["m_iPawnArmor"]);
+        Offset::PlayerController.HasDefuser = get_val<DWORD>(playerController["m_bPawnHasDefuser"]);
+        Offset::PlayerController.HasHelmet = get_val<DWORD>(playerController["m_bPawnHasHelmet"]);
 
         // WeaponBaseData Offsets
         auto weaponBase = classes["C_BasePlayerWeapon"]["fields"];
-        Offset::WeaponBaseData.Clip1 = weaponBase["m_iClip1"].as<DWORD>();
+        Offset::WeaponBaseData.Clip1 = get_val<DWORD>(weaponBase["m_iClip1"]);
         
         auto weaponVData = classes["CBasePlayerWeaponVData"]["fields"];
-        Offset::WeaponBaseData.MaxClip = weaponVData["m_iMaxClip1"].as<DWORD>();
+        Offset::WeaponBaseData.MaxClip = get_val<DWORD>(weaponVData["m_iMaxClip1"]);
         
         auto csWeaponVData = classes["CCSWeaponBaseVData"]["fields"];
-        Offset::WeaponBaseData.CycleTime = csWeaponVData["m_flCycleTime"].as<DWORD>();
-        Offset::WeaponBaseData.Penetration = csWeaponVData["m_flPenetration"].as<DWORD>();
-        Offset::WeaponBaseData.WeaponType = csWeaponVData["m_WeaponType"].as<DWORD>();
-        Offset::WeaponBaseData.Inaccuracy = csWeaponVData["m_flInaccuracyMove"].as<DWORD>();
-        Offset::WeaponBaseData.inReload = csPawn["m_bInReload"].as<DWORD>();
+        Offset::WeaponBaseData.CycleTime = get_val<DWORD>(csWeaponVData["m_flCycleTime"]);
+        Offset::WeaponBaseData.Penetration = get_val<DWORD>(csWeaponVData["m_flPenetration"]);
+        Offset::WeaponBaseData.WeaponType = get_val<DWORD>(csWeaponVData["m_WeaponType"]);
+        Offset::WeaponBaseData.Inaccuracy = get_val<DWORD>(csWeaponVData["m_flInaccuracyMove"]);
+        Offset::WeaponBaseData.inReload = get_val<DWORD>(csPawn["m_bInReload"]);
 
         // C4 Offsets
         auto plantedC4 = classes["C_PlantedC4"]["fields"];
-        Offset::C4.m_bBeingDefused = plantedC4["m_bBeingDefused"].as<DWORD>();
-        Offset::C4.m_flDefuseCountDown = plantedC4["m_flC4Blow"].as<DWORD>(); // Wait, m_flC4Blow is for time remaining?
-        Offset::C4.m_nBombSite = plantedC4["m_nBombSite"].as<DWORD>();
+        Offset::C4.m_bBeingDefused = get_val<DWORD>(plantedC4["m_bBeingDefused"]);
+        Offset::C4.m_flDefuseCountDown = get_val<DWORD>(plantedC4["m_flDefuseCountDown"]);
+        Offset::C4.m_nBombSite = get_val<DWORD>(plantedC4["m_nBombSite"]);
 
         // MoneyServices Offsets
-        Offset::InGameMoneyServices.MoneyServices = playerController["m_pInGameMoneyServices"].as<DWORD>();
+        Offset::InGameMoneyServices.MoneyServices = get_val<DWORD>(playerController["m_pInGameMoneyServices"]);
         auto moneyServicesClass = classes["CCSPlayerController_InGameMoneyServices"]["fields"];
-        Offset::InGameMoneyServices.Account = moneyServicesClass["m_iAccount"].as<DWORD>();
-        Offset::InGameMoneyServices.CashSpentThisRound = moneyServicesClass["m_iCashSpentThisRound"].as<DWORD>();
-        Offset::InGameMoneyServices.TotalCashSpent = moneyServicesClass["m_iTotalCashSpent"].as<DWORD>();
+        Offset::InGameMoneyServices.Account = get_val<DWORD>(moneyServicesClass["m_iAccount"]);
+        Offset::InGameMoneyServices.CashSpentThisRound = get_val<DWORD>(moneyServicesClass["m_iCashSpentThisRound"]);
+        Offset::InGameMoneyServices.TotalCashSpent = get_val<DWORD>(moneyServicesClass["m_iTotalCashSpent"]);
 
-        std::cout << "[Info] Successfully loaded ALL offsets from " << yamlPath << std::endl;
+        std::cout << "[Info] Successfully parsed all offsets." << std::endl;
 
     } catch (const std::exception& e) {
-        std::cout << "[ERROR] Exception while parsing offsets.yaml: " << e.what() << std::endl;
+        std::cout << "[ERROR] Exception while parsing offsets: " << e.what() << std::endl;
         return false;
     }
 

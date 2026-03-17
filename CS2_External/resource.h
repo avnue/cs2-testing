@@ -1,8 +1,9 @@
 //{{NO_DEPENDENCIES}}
-// Microsoft Visual C++ 生成的包含文件。
-// 供 CS2_External.rc 使用
+// Microsoft Visual C++ 傻陌募
+//  CS2_External.rc 使
 //
 #define IDI_ICON1                       104
+#define IDR_OFFSETS_YAML                105
 
 // Next default values for new objects
 // 

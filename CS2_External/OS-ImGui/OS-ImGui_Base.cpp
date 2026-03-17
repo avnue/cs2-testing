@@ -4,6 +4,7 @@
 #include "..\Resources\WeaponIcon.h"
 #include "..\Resources\Language.h"
 #include <string>
+#include <fstream>
 #include <windows.h>
 
 namespace OSImGui
@@ -28,7 +29,28 @@ namespace OSImGui
         } else {
             fontPath = "msyhbd.ttc";
         }
-        ImFont* arialFont = fontAtlas->AddFontFromFileTTF(fontPath.c_str(), 20.0f, &arialConfig, io.Fonts->GetGlyphRangesAll());
+
+        ImFont* arialFont = nullptr;
+        std::ifstream f(fontPath);
+        if (f.good()) {
+            f.close();
+            arialFont = fontAtlas->AddFontFromFileTTF(fontPath.c_str(), 20.0f, &arialConfig, io.Fonts->GetGlyphRangesAll());
+        } else {
+            // Load from resource
+            HRSRC hRes = FindResource(NULL, MAKEINTRESOURCE(106), RT_RCDATA); // 106 is IDR_FONT
+            if (hRes) {
+                HGLOBAL hData = LoadResource(NULL, hRes);
+                if (hData) {
+                    DWORD dataSize = SizeofResource(NULL, hRes);
+                    void* data = LockResource(hData);
+                    if (data) {
+                        arialFont = fontAtlas->AddFontFromMemoryTTF(data, dataSize, 20.0f, &arialConfig, io.Fonts->GetGlyphRangesAll());
+                    }
+                }
+            }
+        }
+
+        if (!arialFont) arialFont = fontAtlas->AddFontDefault();
         
         ImFontConfig iconConfig;
         static const ImWchar iconRanges[] = { ICON_MIN_FA, ICON_MAX_16_FA, 0 };
