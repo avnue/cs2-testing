@@ -25,10 +25,10 @@ namespace Offset
 
 	struct
 	{
-		DWORD Health = 0x162;
+		DWORD Health = 0x354;
 		DWORD TeamID = 0x3F3;
-		DWORD IsAlive = 0x35C;
-		DWORD PlayerPawn = 0x90C;
+		DWORD IsAlive = 0x914;
+		DWORD PlayerPawn = 0x6C4;
 		DWORD iszPlayerName = 0x6F8;
 		DWORD EnemySensor = 0x1440;
 		DWORD GravityScale = 0x224;
@@ -36,10 +36,10 @@ namespace Offset
 
 	struct
 	{
-		DWORD MovementServices = 0x1140;		// CPlayer_MovementServices*
-		DWORD WeaponServices = 0x1100;			// CPlayer_WeaponServices*
-		DWORD BulletServices = 0x67C;			// CCSPlayer_BulletServices*
-		DWORD CameraServices = 0x1138;			// CPlayer_CameraServices*
+		DWORD MovementServices = 0x1418;		// CPlayer_MovementServices*
+		DWORD WeaponServices = 0x13D8;			// CPlayer_WeaponServices*
+		DWORD BulletServices = 0x1660;			// CCSPlayer_BulletServices*
+		DWORD CameraServices = 0x1410;			// CPlayer_CameraServices*
 		DWORD ViewModelServices = 0x12C8;		// CPlayer_ViewModelServices*
 		DWORD pClippingWeapon = 0x3DC0;			// C_CSWeaponBase*
 
@@ -47,10 +47,10 @@ namespace Offset
 		DWORD StartAccount = 0x1490;
 		DWORD isScoped = 0x26F8;
 		DWORD TotalHit = 0x40;
-		DWORD Pos = 0x127C;						// C_BasePlayerPawn::m_vOldOrigin
-		DWORD MaxHealth = 0x15E;				// C_BaseEntity::m_iMaxHealth
-		DWORD CurrentHealth = 0x162;			// C_BaseEntity::m_iHealth
-		DWORD GameSceneNode = 0x152;			// C_BaseEntity::m_pGameSceneNode
+		DWORD Pos = 0x1588;						// C_BasePlayerPawn::m_vOldOrigin
+		DWORD MaxHealth = 0x350;				// C_BaseEntity::m_iMaxHealth
+		DWORD CurrentHealth = 0x354;			// C_BaseEntity::m_iHealth
+		DWORD GameSceneNode = 0x338;			// C_BaseEntity::m_pGameSceneNode
 		DWORD BoneArray = 0x1E0;				// CSkeletonInstance_::m_modelState + CGameSceneNode_::m_vecOrigin
 		DWORD angEyeAngles = 0x3DD0;
 		DWORD vecLastClipCameraPos = 0x3DA4;
@@ -63,8 +63,8 @@ namespace Offset
 		DWORD iTeamNum = 0x3F3;
 		DWORD DesiredFov = 0x6CC;
 		DWORD iFovStart = 0x294;
-		DWORD fFlags = 0x190;
-		DWORD bSpottedByMask = 0x26E0 + 0xC;	// C_CSPlayerPawn::entitySpottedState + EntitySpottedState_t::bSpottedByMask
+		DWORD fFlags = 0x400;
+		DWORD bSpottedByMask = 0x26EC;	// C_CSPlayerPawn::entitySpottedState + EntitySpottedState_t::bSpottedByMask
 	} Pawn;
 
 	struct
@@ -85,12 +85,12 @@ namespace Offset
 	struct
 	{
 		DWORD m_hPawn = 0x6C4;
-		DWORD m_pObserverServices = 0x1118;
-		DWORD m_hObserverTarget = 0x44;
-		DWORD m_hController = 0x1294;
+		DWORD m_pObserverServices = 0x13F0;
+		DWORD m_hObserverTarget = 0x4C;
+		DWORD m_hController = 0x15A0;
 		DWORD PawnArmor = 0x91C;
-		DWORD HasDefuser = 0x398;
-		DWORD HasHelmet = 0x399;
+		DWORD HasDefuser = 0x920;
+		DWORD HasHelmet = 0x921;
 	} PlayerController;
 
 	struct
@@ -113,9 +113,9 @@ namespace Offset
 		DWORD szName = 0x280;
 		DWORD Clip1 = 0x18D0;					// C_BasePlayerWeapon::m_iClip1
 		DWORD MaxClip = 0x3F0;					// CBasePlayerWeaponVData::m_iMaxClip1
-		DWORD CycleTime = 0x294;
+		DWORD CycleTime = 0x660;
 		DWORD Penetration = 0x74C;
-		DWORD WeaponType = 0x1B8;
+		DWORD WeaponType = 0x440;
 		DWORD Inaccuracy = 0x6A8;				// CCSWeaponBaseVData::m_flInaccuracyMove
 		DWORD inReload = 0x19E4;
 
@@ -130,12 +130,12 @@ namespace Offset
 	{
 		DWORD m_bBeingDefused = 0x11AC;
 		DWORD m_flDefuseCountDown = 0x11C0;
-		DWORD m_nBombSite = 0x496;
+		DWORD m_nBombSite = 0x1174;
 	} C4;
 
 	struct
 	{
-		DWORD MoneyServices = 0x6F8;
+		DWORD MoneyServices = 0x808;
 		DWORD Account = 0x40;
 		DWORD TotalCashSpent = 0x48;
 		DWORD CashSpentThisRound = 0x4C;

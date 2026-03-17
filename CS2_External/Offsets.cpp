@@ -44,6 +44,14 @@ bool Offset::UpdateOffsets()
 	Offset::Sensitivity = 0x230A7F8;
 	Offset::InputSystem = 0x45AD0;
 
+	// For CS2, viewangles are usually stored as a pointer
+	DWORD64 ViewAnglePtr = 0;
+	if (ProcessMgr.ReadMemory<DWORD64>(ClientDLL + Offset::ViewAngle, ViewAnglePtr))
+	{
+		// Offset from the pointer is usually 0
+		Offset::ViewAngle = ViewAnglePtr - ClientDLL;
+	}
+
 	// Update the LocalPlayerPawn pointer
 	DWORD64 TempAddress = 0;
 	ProcessMgr.ReadMemory(ClientDLL + Offset::LocalPlayerPawn, TempAddress);

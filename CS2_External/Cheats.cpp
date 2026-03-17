@@ -1,4 +1,4 @@
-﻿#include <string>
+#include <string>
 #include <thread>
 #include <future>
 #include <iostream>
@@ -86,6 +86,7 @@ void Cheats::Run()
 	if ((GetAsyncKeyState(VK_INSERT) & 0x8000) && currentTick - lastTick >= 150) {
 		MenuConfig::ShowMenu = !MenuConfig::ShowMenu;
 		lastTick = currentTick;
+		std::cout << "[Debug] Toggle menu: " << (MenuConfig::ShowMenu ? "ON" : "OFF") << std::endl;
 	}
 //	std::thread keyCheckThread(KeyCheckThread);
 //  std::future<void> Thread_PlayerESP = std::async(ESP::RenderPlayerESP, std::ref(Entity), std::ref(Rect));
