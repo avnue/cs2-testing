@@ -102,8 +102,12 @@ void Cheats::Run()
 	Misc::NightMode();
 
 	// Update matrix
-	if(!ProcessMgr.ReadMemory(gGame.GetMatrixAddress(), gGame.View.Matrix,64))
+	if (!ProcessMgr.ReadMemory(gGame.GetMatrixAddress(), gGame.View.Matrix, 64))
+	{
+		static bool reported = false;
+		if (!reported) { std::cout << "[Debug] Failed to read Matrix at " << std::hex << gGame.GetMatrixAddress() << std::endl; reported = true; }
 		return;
+	}
 
 	// Update EntityList Entry
 	gGame.UpdateEntityListEntry();
@@ -112,9 +116,17 @@ void Cheats::Run()
 	DWORD64 LocalPawnAddress = 0;
 
 	if (!ProcessMgr.ReadMemory(gGame.GetLocalControllerAddress(), LocalControllerAddress))
+	{
+		static bool reported = false;
+		if (!reported) { std::cout << "[Debug] Failed to read LocalControllerAddress at " << std::hex << gGame.GetLocalControllerAddress() << std::endl; reported = true; }
 		return;
+	}
 	if (!ProcessMgr.ReadMemory(gGame.GetLocalPawnAddress(), LocalPawnAddress))
+	{
+		static bool reported = false;
+		if (!reported) { std::cout << "[Debug] Failed to read LocalPawnAddress at " << std::hex << gGame.GetLocalPawnAddress() << std::endl; reported = true; }
 		return;
+	}
 
 	// LocalEntity
 	CEntity LocalEntity, ServerEntity;
