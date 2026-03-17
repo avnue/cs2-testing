@@ -79,6 +79,7 @@ namespace GUI
 	void LoadImages()
 	{
 		if (LUL_Logo == NULL)
+		{
 			Gui.LoadTextureFromMemory(Images::LUL_Logo, sizeof Images::LUL_Logo, &LUL_Logo, &LogoW, &LogoH);
 			Gui.LoadTextureFromMemory(Images::VisualButton, sizeof Images::VisualButton, &MenuButton1, &buttonW, &buttonH);
 			Gui.LoadTextureFromMemory(Images::AimbotButton, sizeof Images::AimbotButton, &MenuButton2, &buttonW, &buttonH);
