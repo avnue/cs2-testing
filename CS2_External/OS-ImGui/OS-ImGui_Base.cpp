@@ -3,6 +3,8 @@
 #include "..\Font\IconsFontAwesome5.h"
 #include "..\Resources\WeaponIcon.h"
 #include "..\Resources\Language.h"
+#include <string>
+#include <windows.h>
 
 namespace OSImGui
 {
@@ -20,7 +22,12 @@ namespace OSImGui
         char exePath[MAX_PATH];
         GetModuleFileNameA(NULL, exePath, MAX_PATH);
         std::string fontPath(exePath);
-        fontPath = fontPath.substr(0, fontPath.find_last_of("\\/") + 1) + "msyhbd.ttc";
+        size_t lastBackslash = fontPath.find_last_of("\\/");
+        if (lastBackslash != std::string::npos) {
+            fontPath = fontPath.substr(0, lastBackslash + 1) + "msyhbd.ttc";
+        } else {
+            fontPath = "msyhbd.ttc";
+        }
         ImFont* arialFont = fontAtlas->AddFontFromFileTTF(fontPath.c_str(), 20.0f, &arialConfig, io.Fonts->GetGlyphRangesAll());
         
         ImFontConfig iconConfig;
