@@ -32,96 +32,20 @@ bool Offset::UpdateOffsets()
 	if (InputDLL == 0)
 		return false;
 
+	// Hardcoded offsets from the provided offsets.yaml (Match 16, 2026)
+	Offset::EntityList = 0x24AE268;
+	Offset::LocalPlayerController = 0x22F3178;
+	Offset::Matrix = 0x230EF20;
+	Offset::GlobalVars = 0x205D5C0;
+	Offset::ViewAngle = 0x2319648;
+	Offset::LocalPlayerPawn = 0x2068B60;
+	Offset::ForceJump = 0x2061E00;
+	Offset::PlantedC4 = 0x2316740;
+	Offset::Sensitivity = 0x230A7F8;
+	Offset::InputSystem = 0x45AD0;
+
+	// Update the LocalPlayerPawn pointer
 	DWORD64 TempAddress = 0;
-
-	TempAddress = SearchOffsets(Offset::Signatures::EntityList, ClientDLL);
-	if (TempAddress == 0)
-		return false;
-
-	Offset::EntityList = TempAddress - ClientDLL;
-
-	TempAddress = SearchOffsets(Offset::Signatures::LocalPlayerController, ClientDLL);
-	if (TempAddress == 0)
-		return false;
-
-	Offset::LocalPlayerController = TempAddress - ClientDLL;
-
-	TempAddress = SearchOffsets(Offset::Signatures::ViewMatrix, ClientDLL);
-	if (TempAddress == 0)
-		return false;
-
-	Offset::Matrix = TempAddress - ClientDLL;
-
-	TempAddress = SearchOffsets(Offset::Signatures::GlobalVars, ClientDLL);
-	if (TempAddress == 0)
-		return false;
-
-	Offset::GlobalVars = TempAddress - ClientDLL;
-
-	TempAddress = SearchOffsets(Offset::Signatures::ViewAngles, ClientDLL);
-	if (TempAddress == 0)
-		return false;
-	if (!ProcessMgr.ReadMemory(TempAddress, TempAddress))
-		return false;
-
-	Offset::ViewAngle = TempAddress + 0x5390 - ClientDLL;
-
-	TempAddress = SearchOffsets(Offset::Signatures::LocalPlayerPawn, ClientDLL);
-	if (TempAddress == 0)
-		return false;
-
-	Offset::LocalPlayerPawn = TempAddress + 0x138 - ClientDLL;
-
-	TempAddress = SearchOffsets(Offset::Signatures::ForceJump, ClientDLL);
-	if (TempAddress == 0)
-		return false;
-
-	Offset::ForceJump = TempAddress + 0x30 - ClientDLL;
-
-	/*
-	TempAddress = SearchOffsets(Offset::Signatures::ForceCrouch, ClientDLL);
-	if (TempAddress == 0)
-		return false;
-
-	Offset::ForceCrouch = TempAddress + 0x30 - ClientDLL;
-
-	TempAddress = SearchOffsets(Offset::Signatures::ForceForward, ClientDLL);
-	if (TempAddress == 0)
-		return false;
-
-	Offset::ForceForward = TempAddress + 0x30 - ClientDLL;
-
-	TempAddress = SearchOffsets(Offset::Signatures::ForceLeft, ClientDLL);
-	if (TempAddress == 0)
-		return false;
-
-	Offset::ForceLeft = TempAddress + 0x30 - ClientDLL;
-
-	TempAddress = SearchOffsets(Offset::Signatures::ForceRight, ClientDLL);
-	if (TempAddress == 0)
-		return false;
-
-	Offset::ForceRight = TempAddress + 0x30 - ClientDLL;
-	*/
-
-	TempAddress = SearchOffsets(Offset::Signatures::PlantedC4, ClientDLL);
-	if (TempAddress == 0)
-		return false;
-
-	Offset::PlantedC4 = TempAddress - ClientDLL;
-
-	TempAddress = SearchOffsets(Offset::Signatures::dwSensitivity, ClientDLL);
-	if (TempAddress == 0)
-		return false;
-
-	Offset::Sensitivity = TempAddress - ClientDLL;
-
-	TempAddress = SearchOffsets(Offset::Signatures::InputSystem, InputDLL);
-	if (TempAddress == 0)
-		return false;
-
-	Offset::InputSystem = TempAddress - InputDLL;
-
 	ProcessMgr.ReadMemory(ClientDLL + Offset::LocalPlayerPawn, TempAddress);
 	Offset::Pointer = TempAddress;
 
