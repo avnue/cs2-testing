@@ -102,11 +102,32 @@ namespace KeyAuth {
         return out.str();
     }
 
+    // Generate a unique, persistent HWID (at least 20 chars for KeyAuth)
+    inline std::string get_hwid() {
+        char compName[MAX_PATH];
+        DWORD size = sizeof(compName);
+        GetComputerNameA(compName, &size);
+
+        DWORD volSerial = 0;
+        GetVolumeInformationA("C:\\", NULL, 0, &volSerial, NULL, NULL, NULL, 0);
+
+        std::stringstream ss;
+        ss << "LUL-" << compName << "-" << std::hex << volSerial << "-LUL-SECURE-HWID";
+        std::string hwid = ss.str();
+        
+        // Ensure it is at least 20 characters
+        while (hwid.length() < 24) {
+            hwid += "0";
+        }
+        return hwid;
+    }
+
     // -----------------------------------------------------------------
     // Main entry point: call this with the user's license key.
     // Returns true if KeyAuth accepts the key, false otherwise.
     // -----------------------------------------------------------------
     inline bool initialize(const std::string& key) {
+        std::string hwid = get_hwid();
         // Build body
         std::string body =
             "type=init"
@@ -139,7 +160,7 @@ namespace KeyAuth {
             "&sessionid=" + url_encode(std::wstring(sessionid.begin(), sessionid.end())) +
             "&name="      + url_encode(name)       +
             "&ownerid="   + url_encode(ownerid)    +
-            "&hwid=default";
+            "&hwid="      + url_encode(std::wstring(hwid.begin(), hwid.end()));
 
         std::string auth_resp = post(apiurl, L"/api/1.3/", auth_body);
         if (auth_resp.empty()) {
