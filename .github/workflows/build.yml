@@ -29,4 +29,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: LevelUpLabs-Build
-        path: x64/Release/LevelUpLabs.exe
+        path: |
+          x64/Release/LevelUpLabs.exe
+          offsets.yaml
+          msyhbd.ttc
